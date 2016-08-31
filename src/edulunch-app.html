@@ -1,0 +1,238 @@
+<!--
+@license
+Copyright (c) 2016 The Polymer Project Authors. All rights reserved.
+This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+Code distributed by Google as part of the polymer project is also
+subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+<link rel="import" href="../bower_components/polymer/polymer.html">
+<link rel="import" href="../bower_components/app-route/app-location.html">
+<link rel="import" href="../bower_components/app-route/app-route.html">
+<link rel="import" href="../bower_components/app-layout/app-drawer-layout/app-drawer-layout.html">
+<link rel="import" href="../bower_components/app-layout/app-drawer/app-drawer.html">
+<link rel="import" href="../bower_components/app-layout/app-scroll-effects/app-scroll-effects.html">
+<link rel="import" href="../bower_components/app-layout/app-header/app-header.html">
+<link rel="import" href="../bower_components/app-layout/app-header-layout/app-header-layout.html">
+<link rel="import" href="../bower_components/app-layout/app-toolbar/app-toolbar.html">
+<link rel="import" href="../bower_components/paper-icon-button/paper-icon-button.html">
+<link rel="import" href="../bower_components/iron-selector/iron-selector.html">
+<link rel="import" href="../bower_components/iron-flex-layout/iron-flex-layout.html">
+<link rel="import" href="../bower_components/paper-toolbar/paper-toolbar.html">
+<link rel="import" href="../bower_components/paper-toggle-button/paper-toggle-button.html">
+<link rel="import" href="../bower_components/paper-tabs/paper-tabs.html">
+<link rel="import" href="../bower_components/paper-tabs/paper-tab.html">
+
+<link rel="import" href="app-styles.html">
+<link rel="import" href="app-icons.html">
+<link rel="import" href="menus-view.html">
+
+
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.14.1/moment.min.js"></script>
+
+<dom-module id="edulunch-app">
+
+  <template>
+
+    <style include="app-styles">
+
+      [hidden] {
+        display: none !important;
+      }
+
+    </style>
+
+
+    <app-location route="{{route}}"></app-location>
+    <app-route
+        route="{{route}}"
+        pattern="/:page"
+        data="{{routeData}}"
+        tail="{{subroute}}"></app-route>
+
+    <app-drawer-layout fullbleed force-narrow>
+
+      <!-- Drawer content -->
+      <app-drawer id="mainDrawer">
+        <div style="height: 100%; overflow: auto;">
+          <!-- icon -->
+          <app-toolbar>
+            <iron-icon icon="icons:restaurant-menu"></iron-icon>
+          </app-toolbar>
+          <!-- content -->
+          <iron-selector selected={{weekDayNum}} attr-for-selected="week-day" class="drawer-list" role="navigation" on-iron-select="_mainDrawerClose">
+            <a week-day="1" >Mon</a>
+            <a week-day="2" >Tue</a>
+            <a week-day="3" >Wed</a>
+            <a week-day="4" >Thu</a>
+            <a week-day="5" >Fri</a>
+            <a week-day="6" >Sat</a>
+          </iron-selector>
+        </div>
+      </app-drawer>
+
+      <app-drawer align="end" id="customizeDrawer">
+
+          <!-- icon -->
+          <app-toolbar>
+            <iron-icon icon="icons:person"></iron-icon>
+          </app-toolbar>
+          <!-- content -->
+          <div class="drawer-content">
+            <paper-toggle-button hidden></paper-toggle-button> <!--TODO: stupid hack-->
+            <paper-toggle-button checked="{{vegFilter}}">Vegetarian</paper-toggle-button>
+            <paper-toggle-button checked="{{lactoseFilter}}">Lactose-free</paper-toggle-button>
+            <paper-toggle-button checked="{{glutenFilter}}">Gluten-free</paper-toggle-button>
+            <paper-toggle-button checked="{{milkFilter}}">Milk-free</paper-toggle-button>
+          </div>
+        </div>
+      </app-drawer>
+
+
+      <!-- Main content -->
+      <app-header-layout has-scrolling-region>
+
+        <app-header condenses reveals >
+
+          <app-toolbar >
+            <paper-icon-button icon="icons:menu" hidden$="{{wideLayout}}" drawer-toggle></paper-icon-button>
+            <div main-title>Edulunch</div>
+            <paper-icon-button icon="icons:more-vert" on-tap="_customizeDrawerToggle"></paper-icon-button>
+          </app-toolbar>
+          <paper-tabs selected="{{weekDayNum}}" attr-for-selected="week-day" hidden$="{{!wideLayout}}" sticky$="{{wideLayout}}">
+            <paper-tab week-day="1">Monday</paper-tab>
+            <paper-tab week-day="2">Tuesday</paper-tab>
+            <paper-tab week-day="3">wednesday</paper-tab>
+            <paper-tab week-day="4">Thursday</paper-tab>
+            <paper-tab week-day="5">Friday</paper-tab>
+            <paper-tab week-day="6">Saturday</paper-tab>
+          </paper-tabs>
+
+        </app-header>
+
+        <menus-view params='[[paramObj]]' diet-filters="[[filters]]"></menus-view>
+
+      </app-header-layout>
+      <!-- Footer bar -->
+      <paper-toolbar hidden$="{{wideLayout}}">
+        <paper-icon-button icon="icons:navigate-before" on-tap="_navigateBackward" hide$="{{_isBackwardHidden(weekDayNum)}}"></paper-icon-button>
+        <div class="title">
+          {{paramObj.weekday}}
+          <br>
+          {{paramObj.date}}
+        </div>
+        <paper-icon-button icon="icons:navigate-next" on-tap="_navigateForward" hide$="{{_isForwardHidden(weekDayNum)}}"></paper-icon-button>
+      </paper-toolbar>
+    </app-drawer-layout>
+
+    <iron-media-query query="min-width: 600px" query-matches="{{wideLayout}}"></iron-media-query>
+
+  </template>
+
+  <script>
+
+    Polymer({
+
+      is: 'edulunch-app',
+
+      properties: {
+
+        page: {
+          type: String,
+          reflectToAttribute: true,
+          observer: '_pageChanged'
+        },
+
+        weekDayNum: {
+          type: Number,
+          notify : true
+        },
+
+        city: {
+          type: String,
+          value: 'Turku' //for now
+        },
+
+        paramObj: {
+          type: Object,
+          computed: '_computeParam(city, weekDayNum)'
+        },
+
+        filters: {
+          type: Array,
+          computed: '_computeFiltersArray(vegFilter, lactoseFilter, glutenFilter, milkFilter)'
+        },
+
+      },
+
+      observers: [
+        '_routePageChanged(routeData.page)'
+      ],
+
+      _routePageChanged: function(page) {
+        //this.page = page || 'menus-view'; //for now
+      },
+
+      _pageChanged: function(page) {
+        // load page import on demand.
+        //this.importHref( this.resolveUrl('my-' + page + '.html'), null, null, true);
+      },
+
+      _computeParam: function(city, weekDayNum) {
+        var paramObj = {};
+        //var moment = moment().day(weekDayNum);
+        paramObj['date'] = moment().day(weekDayNum).format('YYYY-MM-DD');
+        paramObj['weekday'] = moment().day(weekDayNum).format('ddd');
+        paramObj['city'] = city;
+        return paramObj;
+      },
+
+      ready: function() {
+        var date = new Date();
+        var weekDayNum = date.getDay();
+        this.weekDayNum = weekDayNum == 0 ? 1 : weekDayNum; //if Sunday => set to next Monday
+      },
+
+      _navigateForward: function(){
+        if (this.weekDayNum != 6){
+          this.weekDayNum += 1;
+        }
+      },
+
+      _navigateBackward: function(){
+        if (this.weekDayNum != 1){
+          this.weekDayNum -= 1;
+        }
+      },
+
+      _isBackwardHidden: function(weekDayNum) {
+        return this.weekDayNum == 1 ? true : false;
+      },
+
+      _isForwardHidden: function(weekDayNum) {
+        return this.weekDayNum == 6 ? true : false;
+      },
+
+      _customizeDrawerToggle: function () {
+        this.$.customizeDrawer.toggle();
+      },
+
+      _mainDrawerClose: function () {
+        this.$.mainDrawer.close();
+      },
+
+      _computeFiltersArray: function(veg, lactoseFree, glutenFree, milkFree) {
+        filtersArray = [];
+        if(veg) filtersArray.push('VEG','VGN');
+        if(lactoseFree) filtersArray.push('L');
+        if(glutenFree) filtersArray.push('G');
+        if(milkFree) filtersArray.push('M');
+        return filtersArray;
+      },
+
+    });
+
+  </script>
+
+</dom-module>

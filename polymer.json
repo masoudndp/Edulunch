@@ -1,0 +1,15 @@
+{
+  "entrypoint": "index.html",
+  "shell": "src/edulunch-app.html",
+  "fragments": [
+    "src/menus-view.html"
+  ],
+  "sourceGlobs": [
+   "src/**/*",
+   "bower.json"
+  ],
+  "includeDependencies": [
+    "manifest.json",
+    "bower_components/webcomponentsjs/webcomponents-lite.min.js"
+  ]
+}

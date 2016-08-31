@@ -1,0 +1,203 @@
+<!--
+@license
+Copyright (c) 2016 The Polymer Project Authors. All rights reserved.
+This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+Code distributed by Google as part of the polymer project is also
+subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+
+<link rel="import" href="../bower_components/polymer/polymer.html">
+<link rel="import" href="../bower_components/iron-flex-layout/iron-flex-layout.html">
+<link rel="import" href="../bower_components/paper-card/paper-card.html">
+<link rel="import" href="../bower_components/iron-ajax/iron-ajax.html">
+<link rel="import" href="../bower_components/iron-localstorage/iron-localstorage.html">
+
+<dom-module id="menus-view">
+
+  <template>
+
+    <style>
+      @media screen and (min-width: 600px) {
+        :host {
+          display: block;
+          margin: 50px;
+          @apply(--layout-horizontal);
+          @apply(--layout-center-justified);
+          @apply(--layout-wrap);
+        }
+        .menu-card {
+          width: 400px;
+        }
+        .menu:hover {
+          background-color: #E0F2F1;
+        }
+        .menu:hover .special-diet-flag {
+          border: 1px solid;
+          padding: 2px;
+          border-color: #fff;
+        }
+        .flag-padding {
+          padding: 3px;
+          background-color: #E0F2F1;
+        }
+        .menu-title {
+          padding-left: 15px;
+        }
+        .menu-special-diets {
+          padding-right: 15px;
+        }
+      }
+
+      @media (max-width: 600px) {
+        :host {
+          @apply(--layout-vertical;);
+          @apply(--layout-center-justified);
+          padding-bottom: 64px;
+        }
+        .flag-padding {
+          padding: 2px;
+          color: #33691E;
+        }
+      }
+
+      paper-card {
+        margin: 10px 10px;
+        --paper-card-header: {
+            background-color :  #1DE9B6;
+        };
+        --paper-card-header-text: {
+          font-weight: 300;
+          text-align: center;
+          padding: 10px;
+        }
+        @apply(--layout-self-start);
+      }
+
+      .menu {
+      padding: 15px 0px;
+      border-bottom: 1px solid;
+      border-color: #eee;
+      @apply(--layout-horizontal);
+      }
+
+      .menu-title {
+        @apply(--layout-flex);
+        text-align: left;
+        margin-right: 15px;
+      }
+
+      .menu-special-diets {
+        text-align: right;
+      }
+
+      .special-diet-flag {
+        font-size: 0.75em;
+      }
+
+    </style>
+
+    <iron-ajax
+      id="ironajax"
+      auto
+      url="https://edulunch.fi/api/restaurants/menus/[[params.date]]"
+      handle-as="json"
+      on-response="_handleResponse"
+      debounce-duration="300">
+    </iron-ajax>
+
+    <iron-localstorage id="localstorage" name="{{storageName}}"
+      value="[[restaurantsData]]">
+    </iron-localstorage>
+
+    <template is="dom-repeat" items="{{restaurantsData}}">
+      <paper-card heading="{{item.name}}" elevation=1 class="menu-card">
+        <div class="card-content">
+          <template is="dom-repeat" items="{{item.menuList}}" filter="{{_computeFilter(dietFilters)}}">
+            <div class="menu">
+              <div class="menu-title">{{item.title}}</div>
+              <div class="menu-special-diets">
+                <template is="dom-repeat" items="{{item.special-diets}}">
+                  <span class="special-diet-flag flag-padding">{{item}}</span>
+                </template>
+              </div>
+            </div>
+          </template>
+        </div>
+      </paper-card>
+    </template>
+
+  </template>
+
+  <script>
+
+    Polymer({
+
+      is: 'menus-view',
+      properties: {
+
+        restaurantsData: {
+          type: Object,
+          notify: true,
+
+        },
+
+        params: {
+          type: Object,
+          notify: true,
+          observer: '_paramsChanged'
+        },
+
+        storageName: {
+          type: String,
+          computed: '_computeLocalStorageName(params)'
+        },
+
+        dietFilters: {
+          type: Array,
+          value: [],
+        }
+      },
+
+      _paramsChanged: function() {
+        if (!window.navigator.onLine) {
+          this.async(function(){
+            this.restaurantsData = this.$.localstorage.value;
+          });
+        }
+      },
+
+      _computeLocalStorageName: function(params) {
+        var storageName = params.city + '-' + params.weekday;
+        return storageName;
+      },
+
+      _handleResponse: function() {
+        this.restaurantsData = this.$.ironajax.lastResponse;
+      },
+
+      _filter : function(dietsArray) {
+        console.log(dietsArray);
+        return false;
+      },
+
+      _computeFilter: function(filtersArray) {
+        if (filtersArray.length == 0)
+          return null;
+        return function(menu) {
+          // console.log(menu);
+          for (var i = 0; i < filtersArray.length; i++) {
+            if (menu['special-diets'].indexOf(filtersArray[i]) == -1) {
+              return false;
+            }
+          }
+          return true;
+        };
+      },
+
+    });
+
+  </script>
+
+</dom-module>
