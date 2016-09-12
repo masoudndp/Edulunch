@@ -102,7 +102,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       id="ironajax"
       auto
       url="https://edulunch.fi/api/restaurants/menus"
-      params='{"city":[[params.city]], "date":[[params.date]]}'
+      params="{{_computeApiParam(params)}}"
       handle-as="json"
       on-response="_handleResponse"
       debounce-duration="300">
@@ -167,6 +167,10 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
             this.restaurantsData = this.$.localstorage.value;
           });
         }
+      },
+
+      _computeApiParam: function(params) {
+        return {"city": params.city, "date": params.date}
       },
 
       _computeLocalStorageName: function(params) {
