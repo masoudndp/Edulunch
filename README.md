@@ -4,7 +4,7 @@ Menu Aggregator of Student restaurants and cafes in Turku (next, major cities in
 #### chain restaurants
 
 ###### Turku
- - [x] [Unica](unica.fi)
- - [x] [Kårkaféerna](studentlunch.fi/en/)
+ - [x] [Unica](www.unica.fi)
+ - [x] [Kårkaféerna](www.studentlunch.fi/en/)
  - [ ] Sodexo
  - [ ] Amica
